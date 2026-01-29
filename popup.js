@@ -54,6 +54,5 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Refresh UI when storage changes
 chrome.storage.onChanged.addListener(renderRequests);
 renderRequests();

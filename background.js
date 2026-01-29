@@ -35,27 +35,14 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
     let displayTitle = req.url;
     let finalPostData = req.postData || "";
 
-    // --- SMART PARSING: Extraction for YouTube and JSON ---
     if (req.postData) {
       try {
         const jsonObj = JSON.parse(req.postData);
-        
-        // Check if this is a YouTube search request
-        if (jsonObj.query) {
-          displayTitle = `🔍 SEARCH: "${jsonObj.query}"`;
-        } else if (req.url.includes('youtubei/v1/')) {
-          const endpoint = req.url.split('v1/')[1].split('?')[0];
-          displayTitle = `📺 YT API: ${endpoint}`;
-        }
-
-        // Optional: Re-format JSON for the cURL to be slightly more readable
         finalPostData = JSON.stringify(jsonObj);
       } catch (e) {
-        // Not JSON, keep original postData
       }
     }
 
-    // --- CLEAN CURL CONSTRUCTION ---
     let curl = `curl '${req.url}' \\\n  -X ${req.method}`;
     
     if (req.headers) {
@@ -67,14 +54,13 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
     }
 
     if (finalPostData) {
-      // Escape single quotes to prevent breaking the shell command
       const escapedData = finalPostData.replace(/'/g, "\\'");
       curl += ` \\\n  --data-raw '${escapedData}'`;
     }
 
     const newReq = { 
       id: params.requestId, 
-      url: displayTitle, // This goes to the popup list
+      url: displayTitle, 
       method: req.method, 
       curl: curl 
     };

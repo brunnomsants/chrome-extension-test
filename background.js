@@ -9,8 +9,8 @@ chrome.runtime.onMessage.addListener((msg) => {
       currentTabId = tabs[0].id;
       if (msg.status) {
         chrome.debugger.attach(target, "1.3", () => {
-          chrome.debugger.sendCommand(target, "Fetch.enable", { 
-            patterns: [{ urlPattern: '*', requestStage: 'Request' }] 
+          chrome.debugger.sendCommand(target, "Fetch.enable", {
+            patterns: [{ urlPattern: '*', requestStage: 'Request' }]
           });
         });
       } else {
@@ -40,29 +40,33 @@ chrome.debugger.onEvent.addListener((source, method, params) => {
         const jsonObj = JSON.parse(req.postData);
         finalPostData = JSON.stringify(jsonObj);
       } catch (e) {
+
       }
     }
 
-    let curl = `curl '${req.url}' \\\n  -X ${req.method}`;
-    
+
+    let curl = `curl "${req.url}" ^\n  -X ${req.method}`;
+
     if (req.headers) {
       for (const [key, val] of Object.entries(req.headers)) {
         if (ESSENTIAL_HEADERS.includes(key.toLowerCase())) {
-          curl += ` \\\n  -H '${key}: ${val}'`;
+          const escapedVal = val.replace(/"/g, '\\"');
+          curl += ` ^\n  -H "${key}: ${escapedVal}"`;
         }
       }
     }
 
     if (finalPostData) {
-      const escapedData = finalPostData.replace(/'/g, "\\'");
-      curl += ` \\\n  --data-raw '${escapedData}'`;
+
+      const escapedData = finalPostData.replace(/"/g, '\\"');
+      curl += ` ^\n  --data-raw "${escapedData}"`;
     }
 
-    const newReq = { 
-      id: params.requestId, 
-      url: displayTitle, 
-      method: req.method, 
-      curl: curl 
+    const newReq = {
+      id: params.requestId,
+      url: displayTitle,
+      method: req.method,
+      curl: curl
     };
 
     chrome.storage.local.get({ requests: [] }, (data) => {
